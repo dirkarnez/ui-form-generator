@@ -1,0 +1,94 @@
+<html>
+
+<body>
+    <script type="module">
+        import {
+            createSignal,
+            createEffect,
+            onCleanup,
+            on,
+            For
+        } from "https://cdn.skypack.dev/solid-js";
+        import { render } from "https://cdn.skypack.dev/solid-js/web";
+        import html from "https://cdn.skypack.dev/solid-js/html";
+
+        const App = () => {
+            const [fieldList, setFieldList] = createSignal([], { equals: false });
+
+            createEffect(on(fieldList, v => {
+                console.log(JSON.stringify(fieldList()))
+            }));
+            
+            return html`
+            <div>
+                <div>
+                    <${For} each="${() => fieldList()}">
+                        ${(field, index) => {
+                            const id = `type-select-${index()}`;
+                            return (
+                                html`<div>
+                                    <input type="text" placeholder="field name"/>
+                                    <select id="${id}" onchange="${e => {
+                                        setFieldList(a => {
+                                            const newArr = a.map((element, elementIndex) => {
+                                                if (elementIndex == index()) {
+                                                    return ({...element, type: e.currentTarget.value })
+                                                } else {
+                                                    return element;
+                                                }
+                                            });
+                                            return newArr;
+                                        })
+                                    }}">
+                                        ${(field.type == "number") ? 
+                                            html`<option value="number" selected>number</option>` : 
+                                            html`<option value="number">number</option>`
+                                        }
+                                        ${(field.type == "text") ? 
+                                            html`<option value="text" selected>text</option>` : 
+                                            html`<option value="text">text</option>`
+                                        }
+                                        <option value="checkbox">checkbox</option>
+                                        <option value="color">color</option>
+                                        <option value="date">date</option>
+                                        <option value="datetime-local">datetime-local</option>
+                                        <option value="email">email</option>
+                                        <option value="file">file</option>
+                                        <option value="image">image</option>
+                                        <option value="month">month</option>
+                                        <option value="password">password</option>
+                                        <option value="radio">radio</option>
+                                        <option value="range">range</option>
+                                        <option value="tel">tel</option>
+                                        <option value="time">time</option>
+                                        <option value="url">url</option>
+                                        <option value="week">week</option>
+                                    </select>
+                                    <button onclick="${() => {
+                                        setFieldList(a => {
+                                            return a.filter((_, a_index) => a_index != index())
+                                        });
+                                    }}">-</button>
+                                </div>`
+                            )
+                        }}
+                    <//>
+                    <button onclick="${() => {
+                        setFieldList(a => {
+                            return [...a, {type: "text"}]
+                        });
+                    }}">+</button>
+                </div>
+                <pre>${fieldList().length}</pre>
+            </div>
+            `;
+            // // or
+            // return h("div", {}, count);
+        };
+
+        render(App, document.body);
+    </script>
+</body>
+
+</html>
+
