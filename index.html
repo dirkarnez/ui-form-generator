@@ -14,21 +14,41 @@
 
         const App = () => {
             const [fieldList, setFieldList] = createSignal([], { equals: false });
+            const [code, setCode] = createSignal("");
 
             createEffect(on(fieldList, v => {
-                console.log(JSON.stringify(fieldList()))
+                setCode(v.map(element => `<input name="${element.name}" type="${element.type}"/>`).join("\n"));
             }));
-            
+
             return html`
             <div>
                 <div>
                     <${For} each="${() => fieldList()}">
                         ${(field, index) => {
-                            const id = `type-select-${index()}`;
+                            const renderOption = (type, v) => type == 
+                                v 
+                                ?
+                                html`<option value="${v}" selected>${v}</option>`
+                                : 
+                                html`<option value="${v}">${v}</option>`;
+
                             return (
                                 html`<div>
-                                    <input type="text" placeholder="field name"/>
-                                    <select id="${id}" onchange="${e => {
+                                    <input type="text" placeholder="field name" value="${field.name}"
+                                        onchange="${e => {
+                                            setFieldList(a => {
+                                                const newArr = a.map((element, elementIndex) => {
+                                                    if (elementIndex == index()) {
+                                                        return ({...element, name: e.currentTarget.value })
+                                                    } else {
+                                                        return element;
+                                                    }
+                                                });
+                                                return newArr;
+                                            })
+                                        }}"
+                                    />
+                                    <select onchange="${e => {
                                         setFieldList(a => {
                                             const newArr = a.map((element, elementIndex) => {
                                                 if (elementIndex == index()) {
@@ -40,29 +60,21 @@
                                             return newArr;
                                         })
                                     }}">
-                                        ${(field.type == "number") ? 
-                                            html`<option value="number" selected>number</option>` : 
-                                            html`<option value="number">number</option>`
-                                        }
-                                        ${(field.type == "text") ? 
-                                            html`<option value="text" selected>text</option>` : 
-                                            html`<option value="text">text</option>`
-                                        }
-                                        <option value="checkbox">checkbox</option>
-                                        <option value="color">color</option>
-                                        <option value="date">date</option>
-                                        <option value="datetime-local">datetime-local</option>
-                                        <option value="email">email</option>
-                                        <option value="file">file</option>
-                                        <option value="image">image</option>
-                                        <option value="month">month</option>
-                                        <option value="password">password</option>
-                                        <option value="radio">radio</option>
-                                        <option value="range">range</option>
-                                        <option value="tel">tel</option>
-                                        <option value="time">time</option>
-                                        <option value="url">url</option>
-                                        <option value="week">week</option>
+                                        ${renderOption(field.type, "number")}
+                                        ${renderOption(field.type, "text")}
+                                        ${renderOption(field.type, "checkbox")}
+                                        ${renderOption(field.type, "date")}
+                                        ${renderOption(field.type, "datetime-local")}
+                                        ${renderOption(field.type, "email")}
+                                        ${renderOption(field.type, "file")}
+                                        ${renderOption(field.type, "image")}
+                                        ${renderOption(field.type, "month")}
+                                        ${renderOption(field.type, "password")}
+                                        ${renderOption(field.type, "radio")}
+                                        ${renderOption(field.type, "range")}
+                                        ${renderOption(field.type, "tel")}
+                                        ${renderOption(field.type, "url")}
+                                        ${renderOption(field.type, "week")}
                                     </select>
                                     <button onclick="${() => {
                                         setFieldList(a => {
@@ -75,11 +87,12 @@
                     <//>
                     <button onclick="${() => {
                         setFieldList(a => {
-                            return [...a, {type: "text"}]
+                            return [...a, {name: "", type: "text"}]
                         });
                     }}">+</button>
                 </div>
-                <pre>${fieldList().length}</pre>
+                <pre>${code}</pre>
+                <div style="display: flex; flex-direction: column; max-width: 500px" innerHTML=${code}/>
             </div>
             `;
             // // or
