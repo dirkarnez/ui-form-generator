@@ -12,17 +12,26 @@
         import { render } from "https://cdn.skypack.dev/solid-js/web";
         import html from "https://cdn.skypack.dev/solid-js/html";
 
+        const PascalCase = t => t.replaceAll(/(-[^-])|(^.{1})/g, x => {
+            const temp = x.toUpperCase();
+            return temp.charAt(0) == "-" ? temp.substr(1) : temp;
+        });
+
         const App = () => {
             const [fieldList, setFieldList] = createSignal([], { equals: false });
-            const [code, setCode] = createSignal("");
-
+            const [htmlCode, setHTMLCode] = createSignal("");
+            const [goCode, setGoCode] = createSignal("");
+            
             createEffect(on(fieldList, v => {
-                setCode(v.map(element => `<input name="${element.name}" type="${element.type}"/>`).join("\n"));
+                setHTMLCode(v.map(element => `<input name="${element.name}" type="${element.type}"/>`).join("\n"));
+                setGoCode(`type MyStruct struct {\n${v.map(element => `\t${PascalCase(element.name)} string \`json:"${element.name.replaceAll("-", "_")}"\``).join("\n")}\n}`);
             }));
 
             return html`
             <div>
                 <div>
+                    naming convention: "user-name"
+                    <br>
                     <${For} each="${() => fieldList()}">
                         ${(field, index) => {
                             const renderOption = (type, v) => type == 
@@ -31,34 +40,16 @@
                                 html`<option value="${v}" selected>${v}</option>`
                                 : 
                                 html`<option value="${v}">${v}</option>`;
-
+                                
                             return (
                                 html`<div>
                                     <input type="text" placeholder="field name" value="${field.name}"
                                         onchange="${e => {
-                                            setFieldList(a => {
-                                                const newArr = a.map((element, elementIndex) => {
-                                                    if (elementIndex == index()) {
-                                                        return ({...element, name: e.currentTarget.value })
-                                                    } else {
-                                                        return element;
-                                                    }
-                                                });
-                                                return newArr;
-                                            })
+                                            setFieldList(a => a.map((element, elementIndex) => elementIndex == index() ? ({...element, name: e.currentTarget.value }) : element))
                                         }}"
                                     />
                                     <select onchange="${e => {
-                                        setFieldList(a => {
-                                            const newArr = a.map((element, elementIndex) => {
-                                                if (elementIndex == index()) {
-                                                    return ({...element, type: e.currentTarget.value })
-                                                } else {
-                                                    return element;
-                                                }
-                                            });
-                                            return newArr;
-                                        })
+                                        setFieldList(a => a.map((element, elementIndex) => elementIndex == index() ? ({...element, type: e.currentTarget.value }) : element))
                                     }}">
                                         ${renderOption(field.type, "number")}
                                         ${renderOption(field.type, "text")}
@@ -91,8 +82,9 @@
                         });
                     }}">+</button>
                 </div>
-                <pre>${code}</pre>
-                <div style="display: flex; flex-direction: column; max-width: 500px" innerHTML=${code}/>
+                <pre>${htmlCode}</pre>
+                <div style="display: flex; flex-direction: column; max-width: 500px" innerHTML=${htmlCode}/>
+                <pre>${goCode}</pre>
             </div>
             `;
             // // or
